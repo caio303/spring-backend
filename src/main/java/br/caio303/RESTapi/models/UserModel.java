@@ -1,7 +1,6 @@
 package br.caio303.RESTapi.models;
 
 import java.io.Serializable;
-import java.util.Date;
 import java.util.UUID;
 
 import javax.persistence.Column;
@@ -9,6 +8,8 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.Data;
 
@@ -34,6 +35,7 @@ public class UserModel implements Serializable {
 	private String descricao;
 	
 	@Column(nullable = false, length = 70)
+	@JsonIgnore
 	private String senha;
 	
 	@Column(nullable = false, length = 10)

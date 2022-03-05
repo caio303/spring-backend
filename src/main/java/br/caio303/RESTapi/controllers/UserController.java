@@ -45,8 +45,11 @@ public class UserController {
 	public ResponseEntity<List<UserModel>> listUsers() {
 		return ResponseEntity.status(HttpStatus.OK).body(userService.findAll());
 	}
-	@GetMapping("{cpf}")
-	public ResponseEntity<UserModel> showUser(@PathVariable String cpf) {
+	@GetMapping("/{cpf}")
+	public ResponseEntity<Object> showUser(@PathVariable String cpf) throws Exception {
+		if(!userService.existsByCpf(cpf)) 
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Exception("User not found."));
+		
 		return ResponseEntity.ok(userService.findByCpf(cpf));
 	}
 	

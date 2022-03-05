@@ -21,7 +21,7 @@ public class UserDto {
 	@NotBlank
 	@Size(max = 70)
 	private String email;
-
+	
 	@NotBlank
 	@Size(max = 70)
 	private String senha;
@@ -33,6 +33,5 @@ public class UserDto {
 	@NotBlank
 	@Size(max = 10, min = 10)
 	private String dataNasc;
-	
 	
 }
