@@ -34,7 +34,7 @@ public class UserSS implements UserDetails {
 
 	@Override
 	public String getUsername() {
-		return cpf;
+		return this.cpf;
 	}
 
 	@Override
