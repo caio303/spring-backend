@@ -20,7 +20,7 @@ public class UserModel implements Serializable {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
-	private UUID id;
+	private UUID id_user;
 	
 	@Column(nullable = false, length = 70)
 	private String nome;

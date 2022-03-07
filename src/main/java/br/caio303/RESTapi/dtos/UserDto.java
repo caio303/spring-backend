@@ -1,7 +1,5 @@
 package br.caio303.RESTapi.dtos;
 
-import java.util.Date;
-
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
