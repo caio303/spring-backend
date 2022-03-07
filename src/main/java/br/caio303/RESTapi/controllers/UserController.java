@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.List;
 
 import javax.validation.Valid;
 
@@ -13,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,8 +23,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import br.caio303.RESTapi.dtos.CredentialsDto;
 import br.caio303.RESTapi.dtos.UserDto;
-import br.caio303.RESTapi.models.CredentialsModel;
 import br.caio303.RESTapi.models.UserModel;
+import br.caio303.RESTapi.security.JWTUtil;
 import br.caio303.RESTapi.services.UserService;
 
 @RestController
@@ -59,26 +59,45 @@ public class UserController {
 		byte[] senhaRecebidaEmBytesEncriptada = md.digest(senhaRecebidaEmBytes);
 		String senhaRecebidaEncriptada = new String(senhaRecebidaEmBytesEncriptada, StandardCharsets.UTF_8);
 		
-		if(user.getSenha().equals(senhaRecebidaEncriptada)) { return
-				ResponseEntity.status(HttpStatus.OK).body(user); 
+		if(!user.getSenha().equals(senhaRecebidaEncriptada)) { return
+				ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid Credentials"); 
 		}
-
-		return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid Credentials");
+		
+		JWTUtil jwtUtil = new JWTUtil();
+			
+		return ResponseEntity.status(HttpStatus.ACCEPTED).body(new String(
+				"Bearer "
+				+
+				jwtUtil.generateToken(user.getCpf()
+				)));
 	}
 
-	@GetMapping("/")
-	public ResponseEntity<List<UserModel>> listUsers(@RequestHeader("Authentication") String authHeader) {
-		return ResponseEntity.status(HttpStatus.OK).body(userService.findAll());
-	}
-
-	@GetMapping("usuario/{cpf}")
+	@GetMapping("/{cpf}")
 	public ResponseEntity<Object> showUser(@PathVariable String cpf, @RequestHeader("Authentication") String authHeader)
-			throws Exception {
-		if (authHeader == null)
-			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new IOException("Not authorized request."));
+			throws Exception {		
 		if (!userService.existsByCpf(cpf))
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new IOException("User not found."));
+		
+		JWTUtil jwtUtil = new JWTUtil();
+		if (authHeader == null || !jwtUtil.isTokenValid(authHeader.substring(7)))
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new IOException("Unauthorized request."));
+		
 		return ResponseEntity.ok(userService.findByCpf(cpf));
 	}
+	
+	/*
+	 * @DeleteMapping("/{cpf}") public ResponseEntity<Object>
+	 * deleteUser(@PathVariable String cpf, @RequestHeader("Authentication") String
+	 * authHeader) { if(!userService.existsByCpf(cpf)) return
+	 * ResponseEntity.status(HttpStatus.NOT_FOUND).body(new
+	 * IOException("User not found."));
+	 * 
+	 * JWTUtil jwtUtil = new JWTUtil(); if(authHeader == null ||
+	 * !jwtUtil.isTokenValid(authHeader.substring(7))) return
+	 * ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new
+	 * IOException("Unauthorized request."));
+	 * 
+	 * return RespinseEntity.status(HttpStatus.ACCEPTED).body() }
+	 */
 
 }
