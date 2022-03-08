@@ -3,7 +3,6 @@ package br.caio303.RESTapi.services;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.List;
 
 import javax.transaction.Transactional;
 
@@ -17,7 +16,7 @@ import br.caio303.RESTapi.repositories.UserRepository;
 public class UserService {
 	
 	@Autowired
-	private UserRepository userReposity;
+	private UserRepository userRepository;
 	
 	@Transactional
 	public UserModel save(UserModel userModel) throws NoSuchAlgorithmException {
@@ -26,21 +25,25 @@ public class UserService {
 		byte[] senhaEncriptada = md.digest(senhaEmBytes);
 		userModel.setSenha(new String(senhaEncriptada, StandardCharsets.UTF_8));
 		
-		return userReposity.save(userModel);
-	}
-	
-	// TODO
-	public List<UserModel> findAll() {
-		return userReposity.findAll();
+		return userRepository.save(userModel);
 	}
 	
 	public UserModel findByCpf(String cpf) {
-		return userReposity.findByCpf(cpf);
+		return userRepository.findByCpf(cpf);
 	}
 	
 	public boolean existsByCpf(String cpf) {
-		if(userReposity.existsByCpf(cpf)) return true;
+		if(userRepository.existsByCpf(cpf)) return true;
 		return false;
+	}
+	
+	@Transactional
+	public void deleteByCpf(String cpf) {
+		if(userRepository.existsByCpf(cpf)) {
+			var user = userRepository.findByCpf(cpf);
+			System.out.println(user);
+			userRepository.deleteById(user.getId_user());
+		}
 	}
 
 }

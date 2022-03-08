@@ -34,6 +34,9 @@ public class UserController {
 
 	@Autowired
 	private UserService userService;
+	
+	@Autowired
+	private JWTUtil jwtUtil;
 
 	@PostMapping(path = "/cadastro")
 	public ResponseEntity<Object> saveUser(@RequestBody @Valid UserDto userDto) throws Exception {
@@ -58,46 +61,53 @@ public class UserController {
 		byte[] senhaRecebidaEmBytes = credentialsDto.getSenha().getBytes(StandardCharsets.UTF_8);
 		byte[] senhaRecebidaEmBytesEncriptada = md.digest(senhaRecebidaEmBytes);
 		String senhaRecebidaEncriptada = new String(senhaRecebidaEmBytesEncriptada, StandardCharsets.UTF_8);
-		
-		if(!user.getSenha().equals(senhaRecebidaEncriptada)) { return
-				ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid Credentials"); 
+
+		if (!user.getSenha().equals(senhaRecebidaEncriptada)) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid Credentials");
 		}
-		
-		JWTUtil jwtUtil = new JWTUtil();
-			
-		return ResponseEntity.status(HttpStatus.ACCEPTED).body(new String(
-				"Bearer "
-				+
-				jwtUtil.generateToken(user.getCpf()
-				)));
+
+		return ResponseEntity.status(HttpStatus.ACCEPTED)
+				.body(new String("Bearer " + jwtUtil.generateToken(user.getCpf())));
 	}
 
 	@GetMapping("/{cpf}")
 	public ResponseEntity<Object> showUser(@PathVariable String cpf, @RequestHeader("Authentication") String authHeader)
-			throws Exception {		
+			throws Exception {
 		if (!userService.existsByCpf(cpf))
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new IOException("User not found."));
-		
-		JWTUtil jwtUtil = new JWTUtil();
+
 		if (authHeader == null || !jwtUtil.isTokenValid(authHeader.substring(7)))
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new IOException("Unauthorized request."));
+
+		String token = authHeader.substring(7);
+		UserModel user = userService.findByCpf(cpf);
 		
-		return ResponseEntity.ok(userService.findByCpf(cpf));
+		if(!jwtUtil.getSubject(token).equals(user.getCpf()))
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new IOException("Unauthorized request."));
+			
+		return ResponseEntity.ok(user);
 	}
-	
-	/*
-	 * @DeleteMapping("/{cpf}") public ResponseEntity<Object>
-	 * deleteUser(@PathVariable String cpf, @RequestHeader("Authentication") String
-	 * authHeader) { if(!userService.existsByCpf(cpf)) return
-	 * ResponseEntity.status(HttpStatus.NOT_FOUND).body(new
-	 * IOException("User not found."));
-	 * 
-	 * JWTUtil jwtUtil = new JWTUtil(); if(authHeader == null ||
-	 * !jwtUtil.isTokenValid(authHeader.substring(7))) return
-	 * ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new
-	 * IOException("Unauthorized request."));
-	 * 
-	 * return RespinseEntity.status(HttpStatus.ACCEPTED).body() }
-	 */
+
+	@DeleteMapping("/{cpf}")
+	public ResponseEntity<Object> deleteUser(@PathVariable String cpf, @RequestHeader("Authentication") String authHeader)
+			throws Exception {
+		
+		if (!userService.existsByCpf(cpf))
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new IOException("User not found."));
+
+		JWTUtil jwtUtil = new JWTUtil();
+		if (authHeader == null || !jwtUtil.isTokenValid(authHeader.substring(7)))
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new IOException("Unauthorized request."));
+
+		String token = authHeader.substring(7);
+		UserModel user = userService.findByCpf(cpf);
+		
+		if(!jwtUtil.getSubject(token).equals(user.getCpf()))
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new IOException("Unauthorized request."));
+		
+		userService.deleteByCpf(user.getCpf());
+		
+		return ResponseEntity.status(HttpStatus.ACCEPTED).body(user);
+	}
 
 }
