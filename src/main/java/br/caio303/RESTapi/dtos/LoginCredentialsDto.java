@@ -8,7 +8,7 @@ import javax.validation.constraints.Size;
 import lombok.Data;
 
 @Data
-public class CredentialsDto implements Serializable {
+public class LoginCredentialsDto implements Serializable {
 	private static final long serialVersionUID = 1L;
 	
 	@NotBlank

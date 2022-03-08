@@ -41,7 +41,6 @@ public class UserService {
 	public void deleteByCpf(String cpf) {
 		if(userRepository.existsByCpf(cpf)) {
 			var user = userRepository.findByCpf(cpf);
-			System.out.println(user);
 			userRepository.deleteById(user.getId_user());
 		}
 	}

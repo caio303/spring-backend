@@ -16,13 +16,16 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import br.caio303.RESTapi.dtos.CredentialsDto;
+import br.caio303.RESTapi.dtos.LoginCredentialsDto;
+import br.caio303.RESTapi.dtos.UpdateCredentialsDto;
 import br.caio303.RESTapi.dtos.UserDto;
+import br.caio303.RESTapi.models.UpdateCredentialsModel;
 import br.caio303.RESTapi.models.UserModel;
 import br.caio303.RESTapi.security.JWTUtil;
 import br.caio303.RESTapi.services.UserService;
@@ -49,7 +52,7 @@ public class UserController {
 	}
 
 	@PostMapping(path = "/login")
-	public ResponseEntity<Object> signIn(@RequestBody @Valid CredentialsDto credentialsDto)
+	public ResponseEntity<Object> signIn(@RequestBody @Valid LoginCredentialsDto credentialsDto)
 			throws NoSuchAlgorithmException {
 		if (!userService.existsByCpf(credentialsDto.getCpf())) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Exception("Invalid Credentials."));
@@ -109,5 +112,42 @@ public class UserController {
 		
 		return ResponseEntity.status(HttpStatus.ACCEPTED).body(user);
 	}
+	
+	@PutMapping("/{cpf}")
+	public ResponseEntity<Object> updateUser(
+				@PathVariable String cpf, 
+				@RequestHeader("Authentication") String authHeader,
+				@RequestBody @Valid UpdateCredentialsDto updateCredentialsDto
+			)
+			throws Exception {
+		
+		if(!userService.existsByCpf(cpf))
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new IOException("User not found."));
+		
 
+		JWTUtil jwtUtil = new JWTUtil();
+		if (authHeader == null || !jwtUtil.isTokenValid(authHeader.substring(7)))
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new IOException("Unauthorized request."));
+
+		String token = authHeader.substring(7);
+		UserModel user = userService.findByCpf(cpf);
+		
+		if(!jwtUtil.getSubject(token).equals(user.getCpf()))
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new IOException("Unauthorized request."));
+		
+		var updatedUser = new UserModel();
+		BeanUtils.copyProperties(user, updatedUser);
+		
+		var updateCredentialsModel = new UpdateCredentialsModel();
+		BeanUtils.copyProperties(updateCredentialsDto, updateCredentialsModel);
+		
+		updatedUser.setNome(updateCredentialsModel.getNome());
+		updatedUser.setEmail(updateCredentialsModel.getEmail());
+		updatedUser.setDescricao(updateCredentialsModel.getDescricao());
+		updatedUser.setSenha(updateCredentialsModel.getSenha());
+		updatedUser.setDataNasc(updateCredentialsModel.getDataNasc());
+		
+		return ResponseEntity.status(HttpStatus.ACCEPTED).body(userService.save(updatedUser));
+		
+	}
 }

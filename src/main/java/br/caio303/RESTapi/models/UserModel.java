@@ -1,7 +1,6 @@
 package br.caio303.RESTapi.models;
 
 import java.io.Serializable;
-import java.util.UUID;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -19,8 +18,8 @@ public class UserModel implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
-	private UUID id_user;
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id_user;
 	
 	@Column(nullable = false, length = 70)
 	private String nome;
