@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 import br.caio303.RESTapi.dtos.LoginCredentialsDto;
 import br.caio303.RESTapi.dtos.UpdateCredentialsDto;
 import br.caio303.RESTapi.dtos.UserDto;
+import br.caio303.RESTapi.models.LoginResponseModel;
 import br.caio303.RESTapi.models.UpdateCredentialsModel;
 import br.caio303.RESTapi.models.UserModel;
 import br.caio303.RESTapi.security.JWTUtil;
@@ -68,9 +69,14 @@ public class UserController {
 		if (!user.getSenha().equals(senhaRecebidaEncriptada)) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid Credentials");
 		}
-
-		return ResponseEntity.status(HttpStatus.ACCEPTED)
-				.body(new String("Bearer " + jwtUtil.generateToken(user.getCpf())));
+		
+		LoginResponseModel responseModel = new LoginResponseModel();
+		
+		responseModel.setAuthenticatedUser(user);
+		responseModel.setToken(new String("Bearer " + jwtUtil.generateToken(user.getCpf())));
+		
+		return ResponseEntity.status(HttpStatus.OK)
+				.body(responseModel);
 	}
 
 	@GetMapping("/{cpf}")
@@ -110,7 +116,7 @@ public class UserController {
 		
 		userService.deleteByCpf(user.getCpf());
 		
-		return ResponseEntity.status(HttpStatus.ACCEPTED).body(user);
+		return ResponseEntity.status(HttpStatus.OK).body(user);
 	}
 	
 	@PutMapping("/{cpf}")
@@ -147,7 +153,7 @@ public class UserController {
 		updatedUser.setSenha(updateCredentialsModel.getSenha());
 		updatedUser.setDataNasc(updateCredentialsModel.getDataNasc());
 		
-		return ResponseEntity.status(HttpStatus.ACCEPTED).body(userService.save(updatedUser));
+		return ResponseEntity.status(HttpStatus.OK).body(userService.save(updatedUser));
 		
 	}
 }
