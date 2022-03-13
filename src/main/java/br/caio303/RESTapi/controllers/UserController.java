@@ -30,6 +30,7 @@ import br.caio303.RESTapi.models.UpdateCredentialsModel;
 import br.caio303.RESTapi.models.UserModel;
 import br.caio303.RESTapi.security.JWTUtil;
 import br.caio303.RESTapi.services.UserService;
+import io.swagger.annotations.ApiOperation;
 
 @RestController
 @CrossOrigin(origins = "*", maxAge = 3600)
@@ -42,6 +43,7 @@ public class UserController {
 	@Autowired
 	private JWTUtil jwtUtil;
 
+	@ApiOperation(value = "Register a user in the database.")
 	@PostMapping(path = "/cadastro")
 	public ResponseEntity<Object> saveUser(@RequestBody @Valid UserDto userDto) throws Exception {
 		if (userService.existsByCpf(userDto.getCpf())) {
@@ -52,6 +54,7 @@ public class UserController {
 		return ResponseEntity.status(HttpStatus.CREATED).body(userService.save(userModel));
 	}
 
+	@ApiOperation(value = "Attempt to sign in, if successful returns JWT token.")
 	@PostMapping(path = "/login")
 	public ResponseEntity<Object> signIn(@RequestBody @Valid LoginCredentialsDto credentialsDto)
 			throws NoSuchAlgorithmException {
@@ -78,7 +81,8 @@ public class UserController {
 		return ResponseEntity.status(HttpStatus.OK)
 				.body(responseModel);
 	}
-
+	
+	@ApiOperation(value = "Validates request token, and returns a user by its cpf.")
 	@GetMapping("/{cpf}")
 	public ResponseEntity<Object> showUser(@PathVariable String cpf, @RequestHeader("Authentication") String authHeader)
 			throws Exception {
@@ -96,7 +100,8 @@ public class UserController {
 			
 		return ResponseEntity.ok(user);
 	}
-
+	
+	@ApiOperation(value = "Validates request token, and deletes a user by its cpf.")
 	@DeleteMapping("/{cpf}")
 	public ResponseEntity<Object> deleteUser(@PathVariable String cpf, @RequestHeader("Authentication") String authHeader)
 			throws Exception {
@@ -119,6 +124,7 @@ public class UserController {
 		return ResponseEntity.status(HttpStatus.OK).body(user);
 	}
 	
+	@ApiOperation(value = "Validates request token, and returns a updated user by its cpf.")
 	@PutMapping("/{cpf}")
 	public ResponseEntity<Object> updateUser(
 				@PathVariable String cpf, 
